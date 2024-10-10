@@ -1,0 +1,45 @@
+version: '3.5'
+
+services:
+  application:
+    container_name: golan-app-alpha
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    volumes:
+      - ./:/app
+    env_file: .env
+    ports:
+      - $API_EXTERNAL_PORT:$API_PORT
+    expose:
+      - $API_EXTERNAL_PORT
+    networks:
+      - golang-postgre
+
+  postgres-db:
+    container_name: go-postgres-db
+    image: 'postgres'
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    expose:
+      - ${POSTGRES_PORT}
+    volumes:
+      - postgres-store:/var/lib/pgsql/data
+      - ./migrations:/usr/src/migrations
+    networks:
+      - golang-postgre
+
+volumes:
+  postgres-store:
+    driver: local
+
+networks:
+  golang-postgre:
+    name: go-dev-network
+    driver: bridge
